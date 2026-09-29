@@ -28,6 +28,12 @@ class UIController {
             meterCleanliness: document.getElementById('meter-cleanliness'),
             meterHealth: document.getElementById('meter-health'),
 
+            valHunger: document.getElementById('val-hunger'),
+            valHappiness: document.getElementById('val-happiness'),
+            valEnergy: document.getElementById('val-energy'),
+            valCleanliness: document.getElementById('val-cleanliness'),
+            valHealth: document.getElementById('val-health'),
+
             speechBubble: document.getElementById('speech-bubble'),
             speechText: document.getElementById('speech-text'),
 
@@ -139,6 +145,12 @@ class UIController {
             this.audio.playButton();
             this.populateShop();
             this.elem.shopModal.classList.remove('hidden');
+
+            // Turn Bobi forward & make him happy so player can preview hats nicely
+            if (this.interaction && this.interaction.pet) {
+                this.interaction.pet.targetRotY = 0;
+                this.interaction.pet.setAnimation('happy');
+            }
         });
 
         this.elem.closeShopBtn.addEventListener('click', () => {

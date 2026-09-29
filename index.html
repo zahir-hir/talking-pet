@@ -5,9 +5,21 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Bobi: Virtual Pet 3D</title>
     <link rel="stylesheet" href="css/style.css">
+    <script>
+        window.onerror = function(msg, url, line) {
+            var errDiv = document.getElementById('debug-error-banner');
+            if (errDiv) {
+                errDiv.style.display = 'block';
+                errDiv.innerHTML = '⚠️ Error: ' + msg + ' (Line ' + line + ')';
+            }
+        };
+    </script>
 </head>
 <body>
     <div id="game-container">
+        <!-- Debug Error Banner -->
+        <div id="debug-error-banner" style="display:none; position:absolute; top:0; left:0; width:100%; background:#f44336; color:white; padding:8px 12px; z-index:999; font-weight:bold; font-size:0.8rem; text-align:center;"></div>
+
         <!-- 3D Canvas Viewport -->
         <div id="canvas-container"></div>
 
@@ -22,7 +34,7 @@
             <span id="mic-badge-text">👂 Bobi mendengarkan...</span>
         </div>
 
-        <!-- Floating Particles & Notifications Container -->
+        <!-- Floating Particles Container -->
         <div id="fx-container"></div>
 
         <!-- TOP UI: Pet Status & Currency -->
@@ -159,7 +171,7 @@
         </div>
     </div>
 
-    <!-- Direct Three.js Library Load (Offline & Local File Protocol Compatible) -->
+    <!-- Direct Three.js Library Load -->
     <script src="js/libs/three.min.js"></script>
 
     <!-- Game Scripts -->

@@ -26,6 +26,7 @@ class PetController {
         this.rightArm = null;
         this.leftFoot = null;
         this.rightFoot = null;
+        this.tailMesh = null;
         this.hatGroup = null;
 
         // Active 3D Particles Array
@@ -186,9 +187,9 @@ class PetController {
 
         // Tail
         const tailGeo = new THREE.SphereGeometry(0.15, 14, 14);
-        const tailMesh = new THREE.Mesh(tailGeo, this.furMaterial);
-        tailMesh.position.set(0, 0.35, -0.42);
-        this.group.add(tailMesh);
+        this.tailMesh = new THREE.Mesh(tailGeo, this.furMaterial);
+        this.tailMesh.position.set(0, 0.35, -0.42);
+        this.group.add(this.tailMesh);
 
         // 7. Hat Attach Point
         this.hatGroup = new THREE.Group();
@@ -375,6 +376,12 @@ class PetController {
             this.rightEyebrow.rotation.z = 0;
         }
 
+        // Tail Wagging
+        if (this.tailMesh) {
+            const wagSpeed = (this.currentAnim === 'happy' || this.currentAnim === 'playing') ? 16 : 4;
+            this.tailMesh.rotation.y = Math.sin(this.animTime * wagSpeed) * 0.25;
+        }
+
         // Animation Switchboard
         switch (this.currentAnim) {
             case 'idle':
@@ -416,8 +423,9 @@ class PetController {
         this.group.position.y = this.targetPos.y + breathe;
         this.headMesh.position.y = 1.05 + Math.sin(this.animTime * 2.5) * 0.015;
 
-        this.leftEar.rotation.z = 0.3 + Math.sin(this.animTime * 2) * 0.03;
-        this.rightEar.rotation.z = -0.3 - Math.sin(this.animTime * 2) * 0.03;
+        // Cute ear twitch
+        this.leftEar.rotation.z = 0.3 + Math.sin(this.animTime * 2) * 0.03 + Math.sin(this.animTime * 6) * 0.02;
+        this.rightEar.rotation.z = -0.3 - Math.sin(this.animTime * 2) * 0.03 - Math.cos(this.animTime * 6) * 0.02;
 
         this.leftFoot.position.z = 0.15;
         this.rightFoot.position.z = 0.15;

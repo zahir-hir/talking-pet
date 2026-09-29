@@ -1,14 +1,21 @@
 /**
  * main.js
- * Game Initialization & 3D Rendering Loop with robust canvas sizing and error resilience.
+ * Game Initialization & 3D Rendering Loop with robust execution hooks and WebGL fallback.
  */
-document.addEventListener('DOMContentLoaded', () => {
+function initGame() {
     const container = document.getElementById('canvas-container');
     if (!container) return;
 
-    // Robust width & height calculation with fallbacks
-    let width = container.clientWidth || window.innerWidth || 400;
-    let height = container.clientHeight || window.innerHeight || 600;
+    if (typeof THREE === 'undefined') {
+        console.error("Three.js library not loaded!");
+        container.innerHTML = '<div style="color:white;padding:30px;text-align:center;"><h2>⚠️ 3D Engine Error</h2><p>Library Three.js tidak termuat. Pastikan file js/libs/three.min.js ada.</p></div>';
+        return;
+    }
+
+    // Force a real paint cycle before measuring — guarantees non-zero dimensions
+    const rect = container.getBoundingClientRect();
+    let width = rect.width > 0 ? rect.width : (container.clientWidth || window.innerWidth || 400);
+    let height = rect.height > 0 ? rect.height : (container.clientHeight || window.innerHeight || 600);
 
     const scene = new THREE.Scene();
     scene.background = new THREE.Color(0xdff0ea);
@@ -17,14 +24,24 @@ document.addEventListener('DOMContentLoaded', () => {
     camera.position.set(0, 3.2, 4.2);
     camera.lookAt(0, 0.9, 0);
 
-    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
+    let renderer;
+    try {
+        renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
+    } catch (e) {
+        console.error("WebGL error:", e);
+        container.innerHTML = '<div style="color:white;padding:30px;text-align:center;"><h2>⚠️ WebGL Error</h2><p>WebGL tidak aktif di browser Anda. Aktifkan Hardware Acceleration.</p></div>';
+        return;
+    }
+
     renderer.setSize(width, height);
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     renderer.shadowMap.enabled = true;
     renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+
+    container.innerHTML = '';
     container.appendChild(renderer.domElement);
 
-    // Initialize Game Systems
+    // Instantiate Game Modules
     const petState = new PetState();
     const audioController = new AudioController();
     window.gameAudio = audioController;
@@ -39,10 +56,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const currencySystem = new CurrencySystem(petState, petController, envBuilder);
     const saveSystem = new SaveSystem(petState);
 
-    // Load saved data safely
     saveSystem.init();
 
-    // Sync visuals with loaded state
     if (petState.furColor) petController.updateFurColor(petState.furColor);
     if (petState.bedColor) envBuilder.updateBedColor(petState.bedColor);
     if (petState.currentHat) petController.updateHat(petState.currentHat);
@@ -51,10 +66,8 @@ document.addEventListener('DOMContentLoaded', () => {
     window.gameUI = uiController;
     uiController.updateUI();
 
-    // Start Needs System Ticking
     needsSystem.start();
 
-    // Handle Window Resize safely
     function handleResize() {
         const newW = container.clientWidth || window.innerWidth || 400;
         const newH = container.clientHeight || window.innerHeight || 600;
@@ -66,11 +79,8 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     window.addEventListener('resize', handleResize);
-
-    // Initial resize trigger to lock in dimensions
     setTimeout(handleResize, 100);
 
-    // Main 3D Animation Loop
     let clock = new THREE.Clock();
 
     function animate() {
@@ -78,18 +88,19 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const delta = clock.getDelta();
 
-        // Update Pet movement & animations
         petController.update(delta);
-
-        // Update target marker pulse
         envBuilder.updateMarkerAnimation(delta);
-
-        // Update camera smooth movement
         petInteraction.updateCamera();
 
-        // Render 3D Scene
         renderer.render(scene, camera);
     }
 
     animate();
-});
+}
+
+// Guaranteed execution hook — defer via rAF to ensure DOM is painted and container has dimensions
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', () => requestAnimationFrame(initGame));
+} else {
+    requestAnimationFrame(initGame);
+}
